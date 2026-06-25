@@ -6,6 +6,8 @@ from datetime import datetime
 import base64
 
 load_dotenv()
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 text = """Ты опытный QA инженер. Проанализируй этот скриншот веб-страницы и найди:
 
 1. ВИЗУАЛЬНЫЕ БАГИ — сломанная вёрстка, перекрывающиеся элементы, обрезанный текст
@@ -16,7 +18,7 @@ text = """Ты опытный QA инженер. Проанализируй эт
 Отвечай структурированно. Если баг найден — опиши где именно на странице."""
 
 def open_url(page, url):
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    #timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"screenshot_{timestamp}.png"
     path_filename = f"C:/Users/Администратор/Desktop/AI_QA/screenshots/{filename}"
     page.goto(url, wait_until="load")
@@ -51,9 +53,22 @@ def work_ai(path_filename):
     )
 
     print(response.choices[0].message.content)
+url = input("Введи URL:")
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False)
     page = browser.new_page()
-    open_url(page, "https://playwright.dev/python/")
+    open_url(page, url)
+    buttons = page.query_selector_all("a, button, [role='button']")
+    lines = []
+    for item in buttons:
+        text = item.inner_text()
+        if not (text == "" or len(text) > 100):
+            lines.append(item.inner_text())
+            
+    with open(f"C:/Users/Администратор/Desktop/AI_QA/reports/report{timestamp}.md","w",encoding='utf-8') as file:
+        for line in lines:
+            file.write(line)
+            file.write("\n")
+        
     browser.close()
