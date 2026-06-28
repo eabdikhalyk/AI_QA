@@ -7,6 +7,7 @@ import base64
 
 load_dotenv()
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+date_now = datetime.now().strftime("%Y-%m-%d")
 
 text = """Ты опытный QA инженер. Проанализируй этот скриншот веб-страницы и найди:
 
@@ -23,7 +24,8 @@ def open_url(page, url):
     path_filename = f"C:/Users/Администратор/Desktop/AI_QA/screenshots/{filename}"
     page.goto(url, wait_until="load")
     page.screenshot(path=path_filename, full_page=True)
-    work_ai(path_filename)
+    response = work_ai(path_filename)
+    return response
 
 def work_ai(path_filename):
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -52,15 +54,20 @@ def work_ai(path_filename):
         ]
     )
 
-    print(response.choices[0].message.content)
+    return response.choices[0].message.content
 url = input("Введи URL:")
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False)
     page = browser.new_page()
-    open_url(page, url)
+    text_reponse = open_url(page, url)
     buttons = page.query_selector_all("a, button, [role='button']")
     lines = []
+    lines.append(f"# QA Report: {url}")
+    lines.append(f"Дата: {date_now}")
+    lines.append("## Анализ страницы")
+    lines.append(text_reponse)
+    lines.append("## Кнопки и ссылки на странице")
     for item in buttons:
         text = item.inner_text()
         if not (text == "" or len(text) > 100):
